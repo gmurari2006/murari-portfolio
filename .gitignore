@@ -1,10 +1,17 @@
 node_modules/
-dist/
 .env
 .env.*
 !.env.example
 
-# Local visual testing artifacts
-screenshots/
-take_screenshots.js
 public/reference/
+
+# Generated screenshots
+screenshots/
+
+# Local screenshot and animation test scripts
+take_screenshots.js
+capture_redesign_screenshots.js
+verify_animation.js
+
+# Build output
+dist/
