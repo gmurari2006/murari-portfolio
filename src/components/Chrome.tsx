@@ -403,7 +403,7 @@ export const Chrome: React.FC = () => {
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.06)',
           }}
         >
-          {SCENES.map((scene) => {
+          {SCENES.filter((s) => s.id !== 'hero').map((scene) => {
             const isActive = activeSceneId === scene.id;
             return (
               <button

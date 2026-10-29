@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useSceneDirector } from '../engine/hooks';
 import { PORTFOLIO_DATA } from '../data';
 
@@ -40,21 +40,21 @@ let globalCalculatedPoints: OrbitPoint[] = [];
 // ==========================================
 export const SkillsBack: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [points, setPoints] = useState<OrbitPoint[]>([]);
+  const chipRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  useSceneDirector('skills', (calc, state) => {
+  const skillsList = PORTFOLIO_DATA.skills.orbitList;
+
+  const updatePositions = (calcP: number, vw: number, vh: number, vis: number, exit: number) => {
     const el = containerRef.current;
     if (!el) return;
 
-    const exitFade = Math.max(0, 1 - calc.exit * 2.4);
-    el.style.opacity = `${calc.vis * exitFade}`;
+    const exitFade = Math.max(0, 1 - exit * 2.4);
+    el.style.opacity = `${vis * exitFade}`;
 
     // Update global angles
-    globalScrollAngle = calc.p * Math.PI * 5; // spins with scroll x5
+    globalScrollAngle = calcP * Math.PI * 5; // spins with scroll x5
     const totalAngle = globalOrbitAngle + globalScrollAngle + globalMouseAngle;
 
-    const vw = state.vw;
-    const vh = state.vh;
     const R = Math.min(0.27 * vw, 0.46 * vh);
     const tilt = -0.28; // rad
 
@@ -74,8 +74,8 @@ export const SkillsBack: React.FC = () => {
       const scale = 0.85 + (zFinal + 1) * 0.15;
 
       return {
-        skill: PORTFOLIO_DATA.skills.orbitList[i],
-        x: (vw < 820 ? 0.5 : 0.5) * vw + xRot * R,
+        skill: skillsList[i],
+        x: 0.5 * vw + xRot * R,
         y: 0.52 * vh + yFinal * R,
         z: zFinal,
         scale,
@@ -83,8 +83,25 @@ export const SkillsBack: React.FC = () => {
     });
 
     globalCalculatedPoints = calculated;
-    // Filter chips with z < 0
-    setPoints(calculated.filter((p) => p.z < 0));
+
+    // Mutate back chips directly via refs
+    chipRefs.current.forEach((chipEl, idx) => {
+      if (!chipEl) return;
+      const pt = calculated[idx];
+      if (!pt || pt.z >= 0) {
+        chipEl.style.display = 'none';
+      } else {
+        chipEl.style.display = 'block';
+        chipEl.style.left = `${pt.x.toFixed(1)}px`;
+        chipEl.style.top = `${pt.y.toFixed(1)}px`;
+        chipEl.style.transform = `translate3d(-50%, -50%, 0) scale(${pt.scale.toFixed(3)})`;
+        chipEl.style.opacity = `${(0.55 + (pt.z + 1) * 0.25).toFixed(3)}`;
+      }
+    });
+  };
+
+  useSceneDirector('skills', (calc, state) => {
+    updatePositions(calc.p, state.vw, state.vh, calc.vis, calc.exit);
   });
 
   // Auto-spin ticker
@@ -102,25 +119,31 @@ export const SkillsBack: React.FC = () => {
     <div
       ref={containerRef}
       className="skills-orbit-back fixed inset-0 pointer-events-none select-none transition-opacity duration-300"
-      style={{ zIndex: 0, willChange: 'opacity' }}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 0,
+        willChange: 'opacity',
+      }}
     >
-      {points.map((pt, idx) => (
+      {skillsList.map((skill, idx) => (
         <div
           key={idx}
-          className="absolute -translate-x-1/2 -translate-y-1/2 px-4 py-1.5 rounded-full font-mono text-xs uppercase tracking-wider transition-transform duration-75 select-none"
+          ref={(el) => (chipRefs.current[idx] = el)}
+          className="absolute px-4 py-1.5 rounded-full font-mono text-xs uppercase tracking-wider select-none"
           style={{
-            left: `${pt.x}px`,
-            top: `${pt.y}px`,
-            transform: `scale(${pt.scale})`,
+            display: 'none',
             color: 'var(--red)',
             backgroundColor: 'rgba(255, 255, 255, 0.75)',
             border: '1px solid rgba(255, 31, 31, 0.4)',
             boxShadow: '0 4px 12px rgba(255, 31, 31, 0.1)',
-            opacity: 0.55 + (pt.z + 1) * 0.25,
             willChange: 'left, top, transform',
           }}
         >
-          {pt.skill}
+          {skill}
         </div>
       ))}
     </div>
@@ -132,7 +155,9 @@ export const SkillsBack: React.FC = () => {
 // ==========================================
 export const SkillsFront: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [points, setPoints] = useState<OrbitPoint[]>([]);
+  const chipRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const skillsList = PORTFOLIO_DATA.skills.orbitList;
 
   useSceneDirector('skills', (calc) => {
     const el = containerRef.current;
@@ -141,32 +166,50 @@ export const SkillsFront: React.FC = () => {
     const exitFade = Math.max(0, 1 - calc.exit * 2.4);
     el.style.opacity = `${calc.vis * exitFade}`;
 
-    // Filter chips with z > 0
-    setPoints(globalCalculatedPoints.filter((p) => p.z >= 0));
+    // Mutate front chips directly via refs
+    chipRefs.current.forEach((chipEl, idx) => {
+      if (!chipEl) return;
+      const pt = globalCalculatedPoints[idx];
+      if (!pt || pt.z < 0) {
+        chipEl.style.display = 'none';
+      } else {
+        chipEl.style.display = 'block';
+        chipEl.style.left = `${pt.x.toFixed(1)}px`;
+        chipEl.style.top = `${pt.y.toFixed(1)}px`;
+        chipEl.style.transform = `translate3d(-50%, -50%, 0) scale(${pt.scale.toFixed(3)})`;
+        chipEl.style.opacity = `${(0.85 + pt.z * 0.15).toFixed(3)}`;
+      }
+    });
   });
 
   return (
     <div
       ref={containerRef}
       className="skills-orbit-front fixed inset-0 pointer-events-none select-none transition-opacity duration-300"
-      style={{ zIndex: 2, willChange: 'opacity' }}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 2,
+        willChange: 'opacity',
+      }}
     >
-      {points.map((pt, idx) => (
+      {skillsList.map((skill, idx) => (
         <div
           key={idx}
-          className="absolute -translate-x-1/2 -translate-y-1/2 px-5 py-2 rounded-full font-mono text-xs uppercase tracking-wider text-paper font-semibold shadow-lg transition-transform duration-75 select-none"
+          ref={(el) => (chipRefs.current[idx] = el)}
+          className="absolute px-5 py-2 rounded-full font-mono text-xs uppercase tracking-wider text-paper font-semibold shadow-lg select-none"
           style={{
-            left: `${pt.x}px`,
-            top: `${pt.y}px`,
-            transform: `scale(${pt.scale})`,
+            display: 'none',
             backgroundColor: 'var(--red)',
             color: '#ffffff',
             boxShadow: '0 8px 24px rgba(255, 31, 31, 0.55)',
-            opacity: 0.85 + pt.z * 0.15,
             willChange: 'left, top, transform',
           }}
         >
-          {pt.skill}
+          {skill}
         </div>
       ))}
     </div>

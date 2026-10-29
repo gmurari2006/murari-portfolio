@@ -55,6 +55,11 @@ export const ContactBack: React.FC = () => {
       ref={redBgRef}
       className="contact-back fixed inset-0 pointer-events-none select-none overflow-hidden"
       style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
         zIndex: 0,
         backgroundColor: 'var(--red)',
         display: 'none',

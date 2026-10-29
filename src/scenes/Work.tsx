@@ -23,7 +23,15 @@ export const WorkBack: React.FC = () => {
   return (
     <div
       className="work-back fixed inset-0 pointer-events-none select-none overflow-hidden"
-      style={{ zIndex: 0, perspective: '900px' }}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 0,
+        perspective: '900px',
+      }}
     >
       <div
         ref={gridRef}

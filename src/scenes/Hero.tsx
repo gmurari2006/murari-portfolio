@@ -67,6 +67,7 @@ export const HeroBack: React.FC = () => {
       ref={containerRef}
       className="hero-back fixed pointer-events-none select-none transition-opacity duration-300"
       style={{
+        position: 'fixed',
         right: '3vw',
         top: '10.5vh',
         zIndex: 0,
@@ -81,7 +82,7 @@ export const HeroBack: React.FC = () => {
             ref={(el) => (lettersRef.current[i] = el)}
             className="inline-block font-anton uppercase text-red leading-none"
             style={{
-              fontSize: 'clamp(80px, min(18.5vw, 36vh), 280px)',
+              fontSize: 'clamp(80px, min(18.5vw, 36vh), 360px)',
               color: 'var(--red)',
               willChange: 'transform, opacity',
               transformStyle: 'preserve-3d',

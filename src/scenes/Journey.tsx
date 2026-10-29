@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { useSceneDirector } from '../engine/hooks';
 import { PORTFOLIO_DATA } from '../data';
 
@@ -7,7 +7,7 @@ import { PORTFOLIO_DATA } from '../data';
 // ==========================================
 export const JourneyBack: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [displayYear, setDisplayYear] = useState<number>(PORTFOLIO_DATA.journey.startYear);
+  const yearTextRef = useRef<HTMLDivElement | null>(null);
 
   useSceneDirector('journey', (calc) => {
     const el = containerRef.current;
@@ -19,7 +19,9 @@ export const JourneyBack: React.FC = () => {
     // Year rolls from startYear (2024) to gradYear (2028)
     const { startYear, gradYear } = PORTFOLIO_DATA.journey;
     const currentYear = Math.round(startYear + (gradYear - startYear) * calc.p);
-    setDisplayYear(currentYear);
+    if (yearTextRef.current) {
+      yearTextRef.current.textContent = String(currentYear);
+    }
   });
 
   return (
@@ -27,6 +29,7 @@ export const JourneyBack: React.FC = () => {
       ref={containerRef}
       className="journey-back fixed pointer-events-none select-none overflow-hidden transition-opacity duration-300"
       style={{
+        position: 'fixed',
         zIndex: 0,
         left: '6vw',
         top: '24vh',
@@ -34,6 +37,7 @@ export const JourneyBack: React.FC = () => {
       }}
     >
       <div
+        ref={yearTextRef}
         className="font-anton leading-none tracking-tight select-none"
         style={{
           fontSize: '44vh',
@@ -42,7 +46,7 @@ export const JourneyBack: React.FC = () => {
           opacity: 0.85,
         }}
       >
-        {displayYear}
+        {PORTFOLIO_DATA.journey.startYear}
       </div>
     </div>
   );

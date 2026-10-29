@@ -151,6 +151,7 @@ class ScrollDirector {
       }
       this.initLenis();
       this.initResizeObserver();
+      (window as any).__director = this;
     }
   }
 
@@ -249,13 +250,19 @@ class ScrollDirector {
     window.dispatchEvent(new CustomEvent('portfolio:intro_start'));
   }
 
-  public scrollTo(targetY: number | string, options?: { duration?: number }) {
+  public scrollTo(targetY: number | string, options?: { duration?: number; immediate?: boolean }) {
     if (!this.lenis) return;
     if (typeof targetY === 'string') {
       const scene = SCENES.find((s) => s.id === targetY);
       if (scene) {
         const m = this.sceneMetrics.get(scene.id);
         if (m) {
+          if (options?.immediate) {
+            this.currentY = m.top;
+            this.lenis.scrollTo(m.top, { immediate: true });
+            this.tick();
+            return;
+          }
           this.lenis.scrollTo(m.top, {
             duration: options?.duration ?? 2.2,
             easing: (t) => 1 - Math.pow(1 - t, 4), // easeOutQuart
@@ -263,6 +270,13 @@ class ScrollDirector {
           return;
         }
       }
+    }
+    if (options?.immediate) {
+      const numY = typeof targetY === 'number' ? targetY : parseFloat(targetY);
+      this.currentY = numY;
+      this.lenis.scrollTo(numY, { immediate: true });
+      this.tick();
+      return;
     }
     this.lenis.scrollTo(targetY, {
       duration: options?.duration ?? 2.2,

@@ -1,8 +1,8 @@
-import React, { useRef, useMemo, useState } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { useSceneDirector } from '../engine/hooks';
 import { PORTFOLIO_DATA } from '../data';
 import { TiltCard } from '../components/TiltCard';
-import { Odometer } from '../components/Odometer';
+import { Odometer, OdometerRef } from '../components/Odometer';
 
 // ==========================================
 // ABOUT BACK LAYER (z0)
@@ -26,10 +26,15 @@ export const AboutBack: React.FC = () => {
       ref={bgRef}
       className="about-back fixed inset-0 pointer-events-none transition-opacity duration-300"
       style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
         zIndex: 0,
         opacity: 0,
         background: `
-          radial-gradient(60vw 90vh at 22vw 70vh, rgba(255, 31, 31, 0.30), rgba(255, 31, 31, 0.10) 55%, transparent 80%),
+          radial-gradient(60vw 90vh at 27vw 65vh, rgba(255, 31, 31, 0.28), rgba(255, 31, 31, 0.08) 55%, transparent 80%),
           linear-gradient(to right, rgba(255, 31, 31, 0.05) 0%, transparent 60%)
         `,
         willChange: 'opacity, transform',
@@ -44,7 +49,7 @@ export const AboutBack: React.FC = () => {
 export const AboutScene: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const wordRefs = useRef<(HTMLSpanElement | null)[]>([]);
-  const [statValues, setStatValues] = useState<number[]>([0, 0, 0]);
+  const odometerRefs = useRef<(OdometerRef | null)[]>([]);
 
   // Split manifesto into individual words
   const manifestoWords = useMemo(() => {
@@ -56,7 +61,7 @@ export const AboutScene: React.FC = () => {
     return new Set(PORTFOLIO_DATA.about.keywords.map((k) => k.toUpperCase()));
   }, []);
 
-  // Update word reveals and odometer cards with scroll
+  // Update word reveals and odometer cards with scroll (PURE REF MUTATIONS - NO RE-RENDERS)
   useSceneDirector('about', (calc) => {
     if (containerRef.current) {
       const exitFade = Math.max(0, 1 - calc.exit * 2.4);
@@ -66,12 +71,12 @@ export const AboutScene: React.FC = () => {
       containerRef.current.style.pointerEvents = isVisible ? 'auto' : 'none';
     }
 
-    // Dynamic roll of odometers driven by scroll
+    // Dynamic roll of odometers driven by scroll through ref
     const rollProgress = Math.min(1, Math.max(0, calc.p * 1.4));
-    const newValues = PORTFOLIO_DATA.about.stats.map((st) => {
-      return Number((st.value * rollProgress).toFixed(st.decimals));
+    PORTFOLIO_DATA.about.stats.forEach((st, idx) => {
+      const val = Number((st.value * rollProgress).toFixed(st.decimals));
+      odometerRefs.current[idx]?.setValue(val);
     });
-    setStatValues(newValues);
 
     // Word by word reveal: opacity .1→1, translateY .25em→0, blur 4px→0
     const totalWords = manifestoWords.length;
@@ -168,7 +173,8 @@ export const AboutScene: React.FC = () => {
 
                 <div className="my-1">
                   <Odometer
-                    value={statValues[idx] ?? st.value}
+                    ref={(el) => (odometerRefs.current[idx] = el)}
+                    value={0}
                     decimals={st.decimals}
                     suffix={st.suffix}
                     fontSize="clamp(36px, 3.8vw, 58px)"

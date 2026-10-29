@@ -3,3 +3,8 @@ dist/
 .env
 .env.*
 !.env.example
+
+# Local visual testing artifacts
+screenshots/
+take_screenshots.js
+public/reference/
